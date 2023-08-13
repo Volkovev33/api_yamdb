@@ -16,7 +16,7 @@ class ReviewSerializer(serializers.ModelSerializer):
             'id', 'text', 'author', 'score', 'pub_date')
 
     def validate(self, data):
-        """Запрещает пользователям оставлять повторные отзывы."""
+        """Валидатор повторных отзывов."""
         if not self.context.get('request').method == 'POST':
             return data
         author = self.context.get('request').user
@@ -29,7 +29,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    """Сериализатор объектов класса Comment."""
+    """Сериализатор для объектов Comment."""
 
     author = serializers.StringRelatedField(
         read_only=True

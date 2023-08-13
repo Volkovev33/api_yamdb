@@ -4,7 +4,7 @@ from rest_framework import viewsets
 
 from reviews.models import Title, Review
 
-from .permissons import AuthorOrReadPermission
+from .permissions import AuthorOrRead
 from .serializers import CommentSerializer, ReviewSerializer
 
 
@@ -13,7 +13,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     serializer_class = ReviewSerializer
     permission_classes = (
-        AuthorOrReadPermission
+        AuthorOrRead
     )
 
     def get_title(self):
@@ -38,7 +38,7 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     serializer_class = CommentSerializer
     permission_classes = (
-        AuthorOrReadPermission
+        AuthorOrRead
     )
 
     def get_review(self):
