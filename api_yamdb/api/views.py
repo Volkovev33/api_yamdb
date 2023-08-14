@@ -1,12 +1,17 @@
+from django.contrib.auth import get_user_model
+from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 
-from rest_framework import viewsets
+from rest_framework import viewsets, views, status
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
 
 from reviews.models import Title, Review
 
 from .permissions import AuthorOrRead
-from .serializers import CommentSerializer, ReviewSerializer
+from .serializers import CommentSerializer, ReviewSerializer, UserSerializer
 
+User = get_user_model()
 
 class ReviewViewSet(viewsets.ModelViewSet):
     """Вьюсет для модели Review."""
@@ -56,3 +61,27 @@ class CommentViewSet(viewsets.ModelViewSet):
             author=self.request.user,
             review=self.get_review()
         )
+
+
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+
+class RegistrationView(views.APIView):
+    permission_classes = (AllowAny,)
+
+    def post(self, request):
+        serializer = UserSerializer(data=request.data)
+        if serializer.is_valid():
+            code = serializer.save()['email_code']
+            email = request.data.get('email')
+            send_mail(
+                subject='API YaMDB, регистрация',
+                message=f'Ваш код подтверждения {code}',
+                from_email='Practicum15@yandex.ru',
+                recipient_list=f'{email}',
+                fail_silently=False,
+            )
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

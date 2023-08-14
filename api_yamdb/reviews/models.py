@@ -24,7 +24,7 @@ class Genre(models.Model):
 
 class Title(models.Model):
     name = models.CharField(max_length=255)
-    year = models.IntegerField(max_length=255)
+    year = models.IntegerField()
     category = models.ForeignKey(
         Category, on_delete=models.SET_NULL,
         related_name='titles_in_category', blank=True, null=True)
@@ -45,7 +45,6 @@ class Review(models.Model):
         null=True
     )
     score = models.IntegerField(
-        related_name='rating',
         validators=[
             MinValueValidator(1,
                               message='Упс, оценка ниже допустимой'),
