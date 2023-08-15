@@ -1,5 +1,7 @@
 from django.contrib.auth import get_user_model
+from django.core.validators import RegexValidator
 from rest_framework import serializers
+from rest_framework.validators import UniqueValidator
 
 from reviews.models import Comment, Review
 
@@ -46,6 +48,22 @@ class CommentSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(
+        max_length=150,
+        validators=[
+            RegexValidator(regex=r'^[\w.@+-]+$'),
+            UniqueValidator(queryset=User.objects.all())
+        ]
+    )
+    email = serializers.EmailField(
+        max_length=254,
+        validators=[
+            UniqueValidator(queryset=User.objects.all())
+        ]
+    )
+
     class Meta:
         model = User
-        fields = ('username', 'email')
+        fields = (
+            'username', 'email', 'last_name', 'first_name', 'role', 'bio'
+        )
