@@ -1,9 +1,9 @@
 from django.urls import include, path
 
-from rest_framework import routers
 from rest_framework.routers import SimpleRouter
 
-from api.views import CategoryViewSet, GenreViewSet, TitleViewSet, RegistrationView, UserViewSet
+from api.views import (CategoryViewSet, GenreViewSet, TitleViewSet,
+                       RegistrationView, UserViewSet)
 
 
 router = SimpleRouter()
@@ -16,6 +16,3 @@ urlpatterns = [
     path('v1/', include(router.urls)),
     path('v1/auth/signup/', RegistrationView.as_view(), name='signup')
 ]
-
-
-
