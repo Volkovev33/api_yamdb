@@ -1,9 +1,52 @@
+
+import datetime as dt
+
 from django.contrib.auth import get_user_model
 from django.core.validators import RegexValidator
+
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
-from reviews.models import Comment, Review
+from reviews.models import Category, Comment, Genre, Review, Title
+
+
+class CategorySerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Category
+        fields = '__all__'
+        lookup_field = 'slug'
+
+
+class GenreSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Genre
+        fields = '__all__'
+        lookup_field = 'slug'
+
+
+class TitleSerializer(serializers.ModelSerializer):
+    category = serializers.SlugRelatedField(
+        slug_field='slug',
+        queryset=Category.objects.all()
+    )
+    genre = serializers.SlugRelatedField(
+        slug_field='slug',
+        queryset=Genre.objects.all(),
+        many=True
+    )
+
+    class Meta:
+        model = Title
+        fields = '__all__'
+
+    def validate_year(self, value):
+        year = dt.date.today().year
+        if not (value <= year):
+            raise serializers.ValidationError(
+                'Нельзя добавлять произведения, которые еще не вышли')
+        return value
 
 
 User = get_user_model()
