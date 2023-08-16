@@ -14,11 +14,12 @@ from reviews.models import Category, Genre, Title, Review
 
 from .permissions import AuthorOrRead
 from .serializers import (CategorySerializer, CommentSerializer,
-                             GenreSerializer, ReviewSerializer,
-                             TitleSerializer, UserSerializer)
+                          GenreSerializer, ReviewSerializer,
+                          TitleSerializer, UserSerializer)
 
 
 User = get_user_model()
+
 
 class ListCreateDestroyViewSet(mixins.ListModelMixin,
                                mixins.CreateModelMixin,
