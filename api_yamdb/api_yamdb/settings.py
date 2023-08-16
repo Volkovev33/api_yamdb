@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import rest_framework.permissions
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -24,7 +25,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_filters',
     'api',
-    'reviews',
+    'reviews'
 ]
 
 MIDDLEWARE = [
@@ -105,3 +106,15 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 STATICFILES_DIRS = ((BASE_DIR / 'static/'),)
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny',
+    ],
+}
+
+AUTH_USER_MODEL = 'reviews.User'
+
+if DEBUG:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

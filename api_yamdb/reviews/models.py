@@ -1,9 +1,24 @@
+from django.contrib.auth.models import AbstractUser
 from django.db import models
-from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 
 
-User = get_user_model()
+ROLES = [
+    ('user', 'Пользователь'),
+    ('moderator', 'Модератор'),
+    ('admin', 'Администратор')
+]
+
+
+class User(AbstractUser):
+    bio = models.TextField('Биография', blank=True)
+    email_code = models.IntegerField('Код подтверждения', default=00000)
+    role = models.CharField(
+        'Роль', max_length=150, default='user', choices=ROLES
+    )
+
+    def __str__(self):
+        return self.username
 
 
 class Category(models.Model):
@@ -48,7 +63,6 @@ class Review(models.Model):
         null=True
     )
     score = models.IntegerField(
-        related_name='rating',
         validators=[
             MinValueValidator(1,
                               message='Упс, оценка ниже допустимой'),

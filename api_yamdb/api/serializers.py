@@ -1,6 +1,11 @@
+
 import datetime as dt
 
+from django.contrib.auth import get_user_model
+from django.core.validators import RegexValidator
+
 from rest_framework import serializers
+from rest_framework.validators import UniqueValidator
 
 from reviews.models import Category, Comment, Genre, Review, Title
 
@@ -44,6 +49,9 @@ class TitleSerializer(serializers.ModelSerializer):
         return value
 
 
+User = get_user_model()
+
+
 class ReviewSerializer(serializers.ModelSerializer):
     """Сериализатор для модели Review."""
 
@@ -80,3 +88,25 @@ class CommentSerializer(serializers.ModelSerializer):
         model = Comment
         fields = (
             'id', 'text', 'author', 'pub_date')
+
+
+class UserSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(
+        max_length=150,
+        validators=[
+            RegexValidator(regex=r'^[\w.@+-]+$'),
+            UniqueValidator(queryset=User.objects.all())
+        ]
+    )
+    email = serializers.EmailField(
+        max_length=254,
+        validators=[
+            UniqueValidator(queryset=User.objects.all())
+        ]
+    )
+
+    class Meta:
+        model = User
+        fields = (
+            'username', 'email', 'last_name', 'first_name', 'role', 'bio'
+        )
