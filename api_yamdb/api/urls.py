@@ -3,12 +3,11 @@ from django.urls import include, path
 from rest_framework.routers import SimpleRouter
 
 from .views import (CategoryViewSet, GenreViewSet, TitleViewSet, RegistrationView,
-                    UserViewSet, TokenView, ReviewViewSet, MeViewSet, CommentViewSet)
+                    UserViewSet, TokenView, ReviewViewSet, CommentViewSet)
 
 
 router = SimpleRouter()
 router.register('users', UserViewSet)
-router.register(r'users/me', MeViewSet)
 router.register('categories', CategoryViewSet)
 router.register('titles', TitleViewSet)
 router.register('genres', GenreViewSet)
