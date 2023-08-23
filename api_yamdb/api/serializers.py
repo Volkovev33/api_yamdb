@@ -12,7 +12,7 @@ class CategorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Category
-        fields = '__all__'
+        fields = ('name', 'slug')
         lookup_field = 'slug'
 
 
@@ -20,7 +20,7 @@ class GenreSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Genre
-        fields = '__all__'
+        fields = ('name', 'slug')
         lookup_field = 'slug'
 
 
@@ -110,7 +110,9 @@ class UserSerializer(serializers.ModelSerializer):
 class TokenSerializer(serializers.ModelSerializer):
     username = serializers.CharField(
         max_length=150,
-        validators=[UniqueValidator(queryset=User.objects.filter(username='me'))]
+        validators=[
+            UniqueValidator(queryset=User.objects.filter(username='me'))
+        ]
     )
 
     class Meta:
