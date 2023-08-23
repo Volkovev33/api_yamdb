@@ -18,9 +18,6 @@ class User(AbstractUser):
     role = models.CharField(
         'Роль', max_length=50, default='user', choices=ROLES
     )
-    password = models.CharField(
-        null=True, blank=True, default='000000', max_length=20
-    )
     REQUIRED_FIELDS = ["email"]
 
     def __str__(self):
@@ -52,7 +49,7 @@ class Title(models.Model):
     category = models.ForeignKey(
         Category, on_delete=models.SET_NULL,
         related_name='titles_in_category', null=True)
-    genre = models.ManyToManyField(Genre)
+    genre = models.ManyToManyField(Genre, through='GenreTitle')
 
     def __str__(self):
         return self.name
@@ -99,3 +96,8 @@ class Comment(models.Model):
         ordering = ('pub_date',)
         verbose_name = 'комментарий'
         verbose_name_plural = 'комментарии'
+
+
+class GenreTitle(models.Model):
+    title = models.ForeignKey(Title, on_delete=models.CASCADE)
+    genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
