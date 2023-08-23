@@ -16,10 +16,14 @@ class User(AbstractUser):
     role = models.CharField(
         'Роль', max_length=50, default='user', choices=ROLES
     )
+<<<<<<< HEAD
+    password = models.CharField(null=True, blank=True, default='000000', max_length=20)
+=======
     # password = models.CharField(
     #     null=True, blank=True,
     #     default='000000', max_length=20
     # )
+>>>>>>> origin/develop
     REQUIRED_FIELDS = ["email"]
 
     def __str__(self):

@@ -1,13 +1,11 @@
-
 import datetime as dt
 
-from django.contrib.auth import get_user_model
 from django.core.validators import RegexValidator
 
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
-from reviews.models import Category, Comment, Genre, Review, Title
+from reviews.models import Category, Comment, Genre, Review, Title, User
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -47,9 +45,6 @@ class TitleSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 'Нельзя добавлять произведения, которые еще не вышли')
         return value
-
-
-User = get_user_model()
 
 
 class ReviewSerializer(serializers.ModelSerializer):
@@ -109,4 +104,18 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = (
             'username', 'email', 'last_name', 'first_name', 'role', 'bio'
+        )
+
+
+class TokenSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(
+        max_length=150,
+        validators=[UniqueValidator(queryset=User.objects.filter(username='me'))]
+    )
+
+    class Meta:
+        model = User
+        fields = (
+            'username',
+            'confirmation_code'
         )
