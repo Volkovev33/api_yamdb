@@ -1,5 +1,6 @@
 from random import randint
 
+from django.db.models import Avg
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -39,7 +40,9 @@ class GenreViewSet(ListCreateDestroyViewSet):
 
 
 class TitleViewSet(viewsets.ModelViewSet):
-    queryset = Title.objects.all().order_by('id')
+    queryset = Title.objects.annotate(
+        rating=Avg('review__score')
+    ).order_by('id')
     serializer_class = TitleSerializer
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
@@ -50,7 +53,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
     """Вьюсет для модели Review."""
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
-    permission_classes = [IsAuthorOrModeratorOrAdminOrReadOnly,]
+    permission_classes = [IsAuthorOrModeratorOrAdminOrReadOnly, ]
 
     def get_title(self):
         """Объект текущего произведения."""
