@@ -12,18 +12,12 @@ ROLES = [
 
 class User(AbstractUser):
     bio = models.TextField('Биография', blank=True)
-    confirmation_code = models.IntegerField('Код подтверждения', default=00000)
+    confirmation_code = models.IntegerField(
+        'Код подтверждения', default=00000
+    )
     role = models.CharField(
         'Роль', max_length=50, default='user', choices=ROLES
     )
-<<<<<<< HEAD
-    password = models.CharField(null=True, blank=True, default='000000', max_length=20)
-=======
-    # password = models.CharField(
-    #     null=True, blank=True,
-    #     default='000000', max_length=20
-    # )
->>>>>>> origin/develop
     REQUIRED_FIELDS = ["email"]
 
     def __str__(self):
@@ -84,6 +78,7 @@ class Review(models.Model):
         ordering = ('pub_date',)
         verbose_name = 'отзыв'
         verbose_name_plural = 'отзывы'
+        unique_together = [['author', 'title']]
 
 
 class Comment(models.Model):
