@@ -5,7 +5,6 @@ from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, mixins
-
 from rest_framework import viewsets, views, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -16,7 +15,8 @@ from .permissions import (IsAdmin, IsAdminOrReadOnly,
                           IsAuthorOrModeratorOrAdminOrReadOnly)
 from .serializers import (CategorySerializer, CommentSerializer,
                           GenreSerializer, ReviewSerializer,
-                          TitleSerializer, UserSerializer, TokenSerializer)
+                          TitleGetSerializer, TitleCreateSerializer,
+                          UserSerializer, TokenSerializer)
 
 
 class ListCreateDestroyViewSet(mixins.ListModelMixin,
@@ -43,10 +43,23 @@ class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.annotate(
         rating=Avg('review__score')
     ).order_by('id')
-    serializer_class = TitleSerializer
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('category__slug', 'genre__slug', 'name', 'year')
+
+    def perform_create(self, serializer):
+        category = get_object_or_404(
+            Category, slug=self.request.data.get('category')
+        )
+        genre = Genre.objects.filter(
+            slug__in=self.request.data.get('genre')
+        )
+        serializer.save(category=category, genre=genre)
+
+    def get_serializer_class(self):
+        if self.action in ('list', 'retrieve'):
+            return TitleGetSerializer
+        return TitleCreateSerializer
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
@@ -76,7 +89,7 @@ class CommentViewSet(viewsets.ModelViewSet):
     """Вьюсет для объектов модели Comment."""
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
-    permission_classes = [IsAuthorOrModeratorOrAdminOrReadOnly,]
+    permission_classes = [IsAuthorOrModeratorOrAdminOrReadOnly, ]
 
     def get_review(self):
         """Возвращает объект текущего отзыва."""

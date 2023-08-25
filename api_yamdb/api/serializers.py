@@ -1,11 +1,12 @@
 import datetime as dt
 
 from django.core.validators import RegexValidator
-
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
-from reviews.models import Category, Comment, Genre, Review, Title, User
+from reviews.models import (Category, Comment, Genre, GenreTitle,
+                            Review, Title, User)
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -24,7 +25,17 @@ class GenreSerializer(serializers.ModelSerializer):
         lookup_field = 'slug'
 
 
-class TitleSerializer(serializers.ModelSerializer):
+class TitleGetSerializer(serializers.ModelSerializer):
+    category = CategorySerializer(read_only=True)
+    genre = GenreSerializer(many=True, read_only=True)
+    rating = serializers.FloatField(read_only=True)
+
+    class Meta:
+        model = Title
+        fields = '__all__'
+
+
+class TitleCreateSerializer(serializers.ModelSerializer):
     category = serializers.SlugRelatedField(
         slug_field='slug',
         queryset=Category.objects.all()
@@ -32,9 +43,8 @@ class TitleSerializer(serializers.ModelSerializer):
     genre = serializers.SlugRelatedField(
         slug_field='slug',
         queryset=Genre.objects.all(),
-        many=True
+        many=True,
     )
-    rating = serializers.FloatField(read_only=True)
 
     class Meta:
         model = Title
@@ -46,6 +56,19 @@ class TitleSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 'Нельзя добавлять произведения, которые еще не вышли')
         return value
+
+    def create(self, validated_data):
+        genres_list = validated_data.pop('genre')
+        title = Title.objects.create(**validated_data)
+        for genre in genres_list:
+            GenreTitle.objects.create(genre=genre, title=title)
+        return title
+
+    # def partial_update(self, instance, validated_data):
+    #     for attr, value in validated_data.items():
+    #         setattr(instance, attr, value)
+    #     instance.save()
+    #     return instance
 
 
 class ReviewSerializer(serializers.ModelSerializer):
