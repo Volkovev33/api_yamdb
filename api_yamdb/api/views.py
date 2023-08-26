@@ -52,18 +52,18 @@ class TitleViewSet(viewsets.ModelViewSet):
         category = get_object_or_404(
             Category, slug=self.request.data.get('category')
         )
+        
+        # так проходит тест, но при запросе через postman в терминале ошибка
+        # 'dict' object has no attribute 'getlist'
         genre = Genre.objects.filter(
+            slug__in=self.request.data.getlist('genre')
+        )
+        print(genre)
+        # а так тест валится, зато в postman всё как надо
+        genre_old = Genre.objects.filter(
             slug__in=self.request.data.get('genre')
         )
-        
-        # при запросе postman список жанров правильно отрабатывается,
-        # создается и возвращается тайтл с правильными жанрами
-        # но вот тестом они не создаются. 
-        # тест проходит только если здесь жестко вшить два жанра, которые он пытается создать
-        # проблема в чтении списка жанров в запросе от теста что ли?
-        # genre = Genre.objects.filter(
-        #     slug__in=['horror', 'comedy']
-        # )
+        print(genre_old)
         serializer.save(category=category, genre=genre)
 
     def get_serializer_class(self):

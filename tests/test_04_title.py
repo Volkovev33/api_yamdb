@@ -52,9 +52,8 @@ class Test04TitleAPI:
             'category': categories[0]['slug'],
             'description': 'Рон Свонсон рекомендует.'
         }
-        # response = admin_client.post(url, data=post_data_1)
-        response = client.post(url, data=post_data_1)
-        assert response.status_code == HTTPStatus.OK, (  # CREATED, ( искусственная ошибка при создании тайтла
+        response = admin_client.post(url, data=post_data_1)
+        assert response.status_code == HTTPStatus.CREATED, (
             f'Если POST-запрос администратора к `{url}` '
             'содержит корректные данные - должен вернуться ответ со статусом '
             '201.'
@@ -153,18 +152,18 @@ class Test04TitleAPI:
         }
         admin_client.post(url, data=data)
 
-        # # имеет явно общие корни с тестом на получение жанров. Тест видимо создает тайтл без них.
-        # response = admin_client.get(f'{url}?genre={genres[1]["slug"]}')
-        # data = response.json()
-        # assert len(data['results']) == 2, (
-        #     f'Проверьте, что для эндпоинта `{url}` реализована возможность '
-        #     'фильтрации по полю `genre` с использованием параметра `slug` '
-        #     'жанра.'
-        #     # f'содержимое response: {response}'
-        #     # f'содержимое data: {data}'
-        #     # f'все созданные тестом жанры: {genres}'
-        #     # f'фильтр по жанру {genres[1]["slug"]}'
-        # )
+        # имеет явно общие корни с тестом на получение жанров. Тест видимо создает тайтл без них.
+        response = admin_client.get(f'{url}?genre={genres[1]["slug"]}')
+        data = response.json()
+        assert len(data['results']) == 2, (
+            f'Проверьте, что для эндпоинта `{url}` реализована возможность '
+            'фильтрации по полю `genre` с использованием параметра `slug` '
+            'жанра.'
+            # f'содержимое response: {response}'
+            # f'содержимое data: {data}'
+            # f'все созданные тестом жанры: {genres}'
+            # f'фильтр по жанру {genres[1]["slug"]}'
+        )
 
         response = admin_client.get(f'{url}?category={categories[0]["slug"]}')
         data = response.json()
