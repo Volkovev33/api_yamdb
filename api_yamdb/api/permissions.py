@@ -31,4 +31,3 @@ class IsAdminOrReadOnly(permissions.BasePermission):
         if request.user.id is None:
             return False
         return request.user.role == "admin" or request.user.is_superuser
-        # return True

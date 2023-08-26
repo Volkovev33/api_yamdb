@@ -11,6 +11,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from reviews.models import Category, Genre, Title, Review, User, Comment
+from .filters import TitleFilter
 from .permissions import (IsAdmin, IsAdminOrReadOnly,
                           IsAuthorOrModeratorOrAdminOrReadOnly)
 from .serializers import (CategorySerializer, CommentSerializer,
@@ -45,7 +46,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     ).order_by('id')
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('category__slug', 'genre__slug', 'name', 'year')
+    filterset_class = TitleFilter
 
     def perform_create(self, serializer):
         category = get_object_or_404(
@@ -54,6 +55,15 @@ class TitleViewSet(viewsets.ModelViewSet):
         genre = Genre.objects.filter(
             slug__in=self.request.data.get('genre')
         )
+        
+        # при запросе postman список жанров правильно отрабатывается,
+        # создается и возвращается тайтл с правильными жанрами
+        # но вот тестом они не создаются. 
+        # тест проходит только если здесь жестко вшить два жанра, которые он пытается создать
+        # проблема в чтении списка жанров в запросе от теста что ли?
+        # genre = Genre.objects.filter(
+        #     slug__in=['horror', 'comedy']
+        # )
         serializer.save(category=category, genre=genre)
 
     def get_serializer_class(self):
