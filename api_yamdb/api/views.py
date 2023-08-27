@@ -48,24 +48,6 @@ class TitleViewSet(viewsets.ModelViewSet):
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
 
-    def perform_create(self, serializer):
-        category = get_object_or_404(
-            Category, slug=self.request.data.get('category')
-        )
-        
-        # так проходит тест, но при запросе через postman в терминале ошибка
-        # 'dict' object has no attribute 'getlist'
-        genre = Genre.objects.filter(
-            slug__in=self.request.data.getlist('genre')
-        )
-        print(genre)
-        # а так тест валится, зато в postman всё как надо
-        genre_old = Genre.objects.filter(
-            slug__in=self.request.data.get('genre')
-        )
-        print(genre_old)
-        serializer.save(category=category, genre=genre)
-
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
             return TitleGetSerializer
