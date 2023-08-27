@@ -19,6 +19,8 @@ from .serializers import (CategorySerializer, CommentSerializer,
                           TitleGetSerializer, TitleCreateSerializer,
                           UserSerializer, TokenSerializer)
 
+ALLOWED_METHODS = ['get', 'post', 'patch', 'delete']
+
 
 class ListCreateDestroyViewSet(mixins.ListModelMixin,
                                mixins.CreateModelMixin,
@@ -47,6 +49,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
+    http_method_names = ALLOWED_METHODS
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
@@ -59,6 +62,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
     permission_classes = [IsAuthorOrModeratorOrAdminOrReadOnly, ]
+    http_method_names = ALLOWED_METHODS
 
     def get_title(self):
         """Объект текущего произведения."""
@@ -82,6 +86,7 @@ class CommentViewSet(viewsets.ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
     permission_classes = [IsAuthorOrModeratorOrAdminOrReadOnly, ]
+    http_method_names = ALLOWED_METHODS
 
     def get_review(self):
         """Возвращает объект текущего отзыва."""
@@ -106,7 +111,7 @@ class UserViewSet(viewsets.ModelViewSet):
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     search_fields = ('=username',)
     lookup_field = 'username'
-    http_method_names = ['get', 'post', 'patch', 'delete']
+    http_method_names = ALLOWED_METHODS
 
     def get_object(self):
         if self.kwargs['username'] == 'me':
