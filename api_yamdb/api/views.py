@@ -55,22 +55,18 @@ class TitleViewSet(viewsets.ModelViewSet):
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
-    """Вьюсет для модели Review."""
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
     permission_classes = [IsAuthorOrModeratorOrAdminOrReadOnly, ]
 
     def get_title(self):
-        """Объект текущего произведения."""
         title_id = self.kwargs.get('title_id')
         return get_object_or_404(Title, pk=title_id)
 
     def get_queryset(self):
-        """Queryset c отзывами."""
         return self.get_title().review.all()
 
     def perform_create(self, serializer):
-        """Создает отзыв для произведения."""
         serializer.save(
             author=self.request.user,
             title=self.get_title()
@@ -78,22 +74,18 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 
 class CommentViewSet(viewsets.ModelViewSet):
-    """Вьюсет для объектов модели Comment."""
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
     permission_classes = [IsAuthorOrModeratorOrAdminOrReadOnly, ]
 
     def get_review(self):
-        """Возвращает объект текущего отзыва."""
         review_id = self.kwargs.get('review_id')
         return get_object_or_404(Review, pk=review_id)
 
     def get_queryset(self):
-        """Queryset c комментариями для текущего review."""
         return self.get_review().comments.all()
 
     def perform_create(self, serializer):
-        """Создает комментарий для текущего review."""
         serializer.save(
             author=self.request.user,
             review=self.get_review()
