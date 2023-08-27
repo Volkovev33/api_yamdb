@@ -44,7 +44,7 @@ class Test04TitleAPI:
         }
         response = admin_client.post(url, data=invalid_data)
         assert response.status_code == HTTPStatus.BAD_REQUEST, assert_msg
-
+# _____________________________________________________________________________________________________
         post_data_1 = {
             'name': 'Мост через реку Квай',
             'year': 1957,
@@ -57,6 +57,8 @@ class Test04TitleAPI:
             f'Если POST-запрос администратора к `{url}` '
             'содержит корректные данные - должен вернуться ответ со статусом '
             '201.'
+            f'содержимое response: {response.data}'
+            f' содержимое post_data_1: {post_data_1}'
         )
         title_count += 1
 
@@ -112,13 +114,14 @@ class Test04TitleAPI:
             'категориях произведений. Сейчас поле `category` для элементов '
             'списка `results` отсутствует или содержит некорректное значение.'
         )
-
+# ____________________________________________________________________________
         title_genres = title.get('genre', [])
         assert genres[0] in title_genres and genres[1] in title_genres, (
             'Проверьте, что при GET-запросе неавторизованного '
             f'пользователя к `{url}` в ответе содержится список жанров '
             'для каждого произведения. Сейчас поле `genres` для элементов '
             'списка `results` отсутствует или содержит некорректное значение.'
+            f'содержимое title: {title}'
         )
         assert title.get('year') == post_data_1['year'], (
             'Проверьте, что при GET-запросе неавторизованного '
@@ -149,12 +152,17 @@ class Test04TitleAPI:
         }
         admin_client.post(url, data=data)
 
+        # имеет явно общие корни с тестом на получение жанров. Тест видимо создает тайтл без них.
         response = admin_client.get(f'{url}?genre={genres[1]["slug"]}')
         data = response.json()
         assert len(data['results']) == 2, (
             f'Проверьте, что для эндпоинта `{url}` реализована возможность '
             'фильтрации по полю `genre` с использованием параметра `slug` '
             'жанра.'
+            # f'содержимое response: {response}'
+            # f'содержимое data: {data}'
+            # f'все созданные тестом жанры: {genres}'
+            # f'фильтр по жанру {genres[1]["slug"]}'
         )
 
         response = admin_client.get(f'{url}?category={categories[0]["slug"]}')
