@@ -118,6 +118,13 @@ class UserSerializer(serializers.ModelSerializer):
             'username', 'email', 'last_name', 'first_name', 'role', 'bio'
         )
 
+    def validate_username(self, value):
+        if value.lower() == 'me':
+            raise serializers.ValidationError(
+                f'Вы не можете создать пользователя с именем: {value}'
+            )
+        return value
+
 
 class TokenSerializer(serializers.ModelSerializer):
     username = serializers.CharField(
