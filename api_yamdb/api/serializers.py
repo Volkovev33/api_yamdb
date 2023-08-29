@@ -126,7 +126,6 @@ class UserSerializer(serializers.ModelSerializer):
         return value
 
 
-
 class TokenSerializer(serializers.ModelSerializer):
     username = serializers.CharField(
         max_length=150,

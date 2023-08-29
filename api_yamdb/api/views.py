@@ -1,5 +1,3 @@
-from random import randint
-
 from django.contrib.auth.tokens import default_token_generator
 from django.db.models import Avg
 from django.core.mail import send_mail
@@ -62,7 +60,7 @@ class TitleViewSet(viewsets.ModelViewSet):
 class ReviewViewSet(viewsets.ModelViewSet):
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
-    permission_classes = [IsAuthorOrModeratorOrAdminOrReadOnly, ]
+    permission_classes = (IsAuthorOrModeratorOrAdminOrReadOnly,)
     http_method_names = ALLOWED_METHODS
 
     def get_title(self):
@@ -82,7 +80,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 class CommentViewSet(viewsets.ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
-    permission_classes = [IsAuthorOrModeratorOrAdminOrReadOnly, ]
+    permission_classes = (IsAuthorOrModeratorOrAdminOrReadOnly,)
     http_method_names = ALLOWED_METHODS
 
     def get_review(self):
@@ -127,16 +125,16 @@ class UserViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if 'username' in self.kwargs and self.kwargs['username'] == 'me':
             if self.request.method in ('PATCH', 'GET'):
-                self.permission_classes = [IsAuthenticated, ]
+                self.permission_classes = (IsAuthenticated,)
         else:
-            self.permission_classes = [IsAdmin, ]
+            self.permission_classes = (IsAdmin,)
         return super(UserViewSet, self).get_permissions()
 
 
 class RegistrationView(CreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [AllowAny]
+    permission_classes = (AllowAny,)
 
     def create(self, request, *args, **kwargs):
         if User.objects.filter(username=request.data.get('username'),
