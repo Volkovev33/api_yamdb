@@ -4,7 +4,7 @@ from django.core.validators import RegexValidator
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
-from reviews.models import (Category, Comment, Genre, GenreTitle,
+from reviews.models import (Category, Comment, Genre,
                             Review, Title, User)
 
 
@@ -51,17 +51,10 @@ class TitleCreateSerializer(serializers.ModelSerializer):
 
     def validate_year(self, value):
         year = dt.date.today().year
-        if not (value <= year):
+        if (value > year):
             raise serializers.ValidationError(
                 'Нельзя добавлять произведения, которые еще не вышли')
         return value
-
-    def create(self, validated_data):
-        genres_list = validated_data.pop('genre')
-        title = Title.objects.create(**validated_data)
-        for genre in genres_list:
-            GenreTitle.objects.create(genre=genre, title=title)
-        return title
 
 
 class ReviewSerializer(serializers.ModelSerializer):
