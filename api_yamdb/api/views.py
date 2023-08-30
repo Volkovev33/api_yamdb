@@ -6,6 +6,7 @@ from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, mixins
 from rest_framework import viewsets, views, status
+from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -100,35 +101,24 @@ class CommentViewSet(viewsets.ModelViewSet):
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all().order_by('id')
     serializer_class = UserSerializer
+    permission_classes = (IsAdmin,)
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     search_fields = ('=username',)
     lookup_field = 'username'
     http_method_names = ALLOWED_METHODS
 
-    def get_object(self):
-        if self.kwargs['username'] == 'me':
-            return self.request.user
+    @action(detail=False,
+            methods=['GET', 'PATCH'],
+            permission_classes=(IsAuthenticated,),
+            url_path='me')
+    def me(self, request):
+        self.kwargs['username'] = request.user.username
+        if request.method == 'GET':
+            return self.retrieve(request)
+        elif request.method == 'PATCH':
+            return self.partial_update(request)
         else:
-            return super().get_object()
-
-    def destroy(self, request, *args, **kwargs):
-        if self.kwargs['username'] == 'me':
             return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-        return super().destroy(self, request, *args, **kwargs)
-
-    def perform_update(self, serializer):
-        if self.kwargs['username'] == 'me':
-            serializer.save(role=self.request.user.role)
-        else:
-            serializer.save()
-
-    def get_permissions(self):
-        if 'username' in self.kwargs and self.kwargs['username'] == 'me':
-            if self.request.method in ('PATCH', 'GET'):
-                self.permission_classes = [IsAuthenticated, ]
-        else:
-            self.permission_classes = [IsAdmin, ]
-        return super(UserViewSet, self).get_permissions()
 
 
 class RegistrationView(views.APIView):
