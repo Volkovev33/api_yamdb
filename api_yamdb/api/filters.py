@@ -10,9 +10,7 @@ class TitleFilter(django_filters.FilterSet):
     genre = django_filters.CharFilter(
         field_name='genre__slug'
     )
-    year = django_filters.NumberFilter()
-    name = django_filters.CharFilter()
 
     class Meta:
         model = Title
-        fields = ('year', 'name', 'category', 'genre', )
+        fields = ('year', 'name', )

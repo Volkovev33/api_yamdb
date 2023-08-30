@@ -10,8 +10,8 @@ class User(AbstractUser):
         USER = 'user'
 
     bio = models.TextField('Биография', blank=True)
-    confirmation_code = models.IntegerField(
-        'Код подтверждения', default=00000
+    confirmation_code = models.CharField(
+        'Код подтверждения', default="", max_length=64
     )
     role = models.CharField(
         'Роль', max_length=20, default=Role.USER, choices=Role.choices
@@ -31,31 +31,47 @@ class User(AbstractUser):
 
 
 class Category(models.Model):
-    name = models.CharField(max_length=255)
-    slug = models.SlugField(unique=True)
+    name = models.CharField('Название', max_length=255)
+    slug = models.SlugField('Слаг', unique=True)
+
+    class Meta:
+        ordering = ('name',)
+        verbose_name = 'категория'
+        verbose_name_plural = 'Категории'
 
     def __str__(self):
         return self.name
 
 
 class Genre(models.Model):
-    name = models.CharField(max_length=255)
-    slug = models.SlugField(unique=True)
+    name = models.CharField('Название', max_length=255)
+    slug = models.SlugField('Слаг', unique=True)
+
+    class Meta:
+        ordering = ('name',)
+        verbose_name = 'жанр'
+        verbose_name_plural = 'Жанры'
 
     def __str__(self):
         return self.name
 
 
 class Title(models.Model):
-    name = models.CharField(max_length=255)
-    year = models.IntegerField()
-    description = models.TextField(
-        blank=True,
-        null=True)
+    name = models.CharField('Название', max_length=255)
+    year = models.PositiveSmallIntegerField('Год выхода')
+    description = models.TextField('Описание', blank=True, null=True)
     category = models.ForeignKey(
         Category, on_delete=models.SET_NULL,
-        related_name='titles_in_category', null=True)
-    genre = models.ManyToManyField(Genre, through='GenreTitle')
+        related_name='titles_in_category', null=True,
+        verbose_name='Категория')
+    genre = models.ManyToManyField(
+        Genre, through='GenreTitle',
+        verbose_name='Жанр')
+
+    class Meta:
+        ordering = ('name',)
+        verbose_name = 'произведение'
+        verbose_name_plural = 'Произведения'
 
     def __str__(self):
         return self.name
