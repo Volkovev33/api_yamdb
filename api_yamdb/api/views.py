@@ -106,7 +106,7 @@ class UserViewSet(viewsets.ModelViewSet):
     lookup_field = 'username'
     http_method_names = ALLOWED_METHODS
 
-    @action(url_path='me', detail=False, methods=['GET', 'PATCH'],
+    @action(detail=False, methods=['GET', 'PATCH'],
             permission_classes=(IsAuthenticated,))
     def me(self, request):
         self.kwargs['username'] = request.user.username
