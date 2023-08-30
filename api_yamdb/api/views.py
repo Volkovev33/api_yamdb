@@ -106,10 +106,8 @@ class UserViewSet(viewsets.ModelViewSet):
     lookup_field = 'username'
     http_method_names = ALLOWED_METHODS
 
-    @action(detail=False,
-            methods=['GET', 'PATCH'],
-            permission_classes=(IsAuthenticated,),
-            url_path='me')
+    @action(url_path='me', detail=False, methods=['GET', 'PATCH'],
+            permission_classes=(IsAuthenticated,))
     def me(self, request):
         self.kwargs['username'] = request.user.username
         if request.method == 'GET':
@@ -118,6 +116,9 @@ class UserViewSet(viewsets.ModelViewSet):
             return self.partial_update(request)
         else:
             return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def perform_update(self, serializer):
+        serializer.save(role=self.request.user.role)
 
 
 class RegistrationView(CreateAPIView):
