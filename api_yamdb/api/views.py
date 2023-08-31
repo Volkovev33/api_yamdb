@@ -1,23 +1,23 @@
-from random import randint
-
+from django.contrib.auth.tokens import default_token_generator
 from django.db.models import Avg
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, mixins
-from rest_framework import viewsets, views, status
+from rest_framework import filters, mixins, viewsets, views, status
+from rest_framework.decorators import action
+from rest_framework.generics import CreateAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from reviews.models import Category, Genre, Title, Review, User, Comment
-from .filters import TitleFilter
-from .permissions import (IsAdmin, IsAdminOrReadOnly,
-                          IsAuthorOrModeratorOrAdminOrReadOnly)
-from .serializers import (CategorySerializer, CommentSerializer,
-                          GenreSerializer, ReviewSerializer,
-                          TitleGetSerializer, TitleCreateSerializer,
-                          UserSerializer, TokenSerializer)
+from api.filters import TitleFilter
+from api.permissions import (IsAdmin, ReadOnly,
+                             IsAuthorOrModeratorOrAdminOrReadOnly)
+from api.serializers import (CategorySerializer, CommentSerializer,
+                             GenreSerializer, ReviewSerializer,
+                             TitleGetSerializer, TitleCreateSerializer,
+                             UserSerializer, TokenSerializer)
 
 ALLOWED_METHODS = ['get', 'post', 'patch', 'delete']
 
@@ -26,7 +26,7 @@ class ListCreateDestroyViewSet(mixins.ListModelMixin,
                                mixins.CreateModelMixin,
                                mixins.DestroyModelMixin,
                                viewsets.GenericViewSet):
-    permission_classes = (IsAdminOrReadOnly,)
+    permission_classes = ((IsAdmin|ReadOnly),)
     lookup_field = 'slug'
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
@@ -46,7 +46,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.annotate(
         rating=Avg('review__score')
     ).order_by('id')
-    permission_classes = (IsAdminOrReadOnly,)
+    permission_classes = ((IsAdmin|ReadOnly),)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
     http_method_names = ALLOWED_METHODS
@@ -60,7 +60,7 @@ class TitleViewSet(viewsets.ModelViewSet):
 class ReviewViewSet(viewsets.ModelViewSet):
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
-    permission_classes = [IsAuthorOrModeratorOrAdminOrReadOnly, ]
+    permission_classes = (IsAuthorOrModeratorOrAdminOrReadOnly,)
     http_method_names = ALLOWED_METHODS
 
     def get_title(self):
@@ -80,7 +80,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 class CommentViewSet(viewsets.ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
-    permission_classes = [IsAuthorOrModeratorOrAdminOrReadOnly, ]
+    permission_classes = (IsAuthorOrModeratorOrAdminOrReadOnly,)
     http_method_names = ALLOWED_METHODS
 
     def get_review(self):
@@ -100,63 +100,53 @@ class CommentViewSet(viewsets.ModelViewSet):
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all().order_by('id')
     serializer_class = UserSerializer
+    permission_classes = (IsAdmin,)
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     search_fields = ('=username',)
     lookup_field = 'username'
     http_method_names = ALLOWED_METHODS
 
-    def get_object(self):
-        if self.kwargs['username'] == 'me':
-            return self.request.user
+    @action(detail=False, methods=['GET', 'PATCH'],
+            permission_classes=(IsAuthenticated,))
+    def me(self, request):
+        self.kwargs['username'] = request.user.username
+        if request.method == 'GET':
+            return self.retrieve(request)
+        elif request.method == 'PATCH':
+            return self.partial_update(request)
         else:
-            return super().get_object()
-
-    def destroy(self, request, *args, **kwargs):
-        if self.kwargs['username'] == 'me':
             return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-        return super().destroy(self, request, *args, **kwargs)
 
     def perform_update(self, serializer):
-        if self.kwargs['username'] == 'me':
-            serializer.save(role=self.request.user.role)
-        else:
-            serializer.save()
-
-    def get_permissions(self):
-        if 'username' in self.kwargs and self.kwargs['username'] == 'me':
-            if self.request.method in ('PATCH', 'GET'):
-                self.permission_classes = [IsAuthenticated, ]
-        else:
-            self.permission_classes = [IsAdmin, ]
-        return super(UserViewSet, self).get_permissions()
+        serializer.save(role=self.request.user.role)
 
 
-class RegistrationView(views.APIView):
+class RegistrationView(CreateAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
     permission_classes = (AllowAny,)
 
-    def post(self, request):
-        username = request.data.get('username')
-        email = request.data.get('email')
-        confirmation_code = randint(10000, 99999)
+    def create(self, request, *args, **kwargs):
+        if User.objects.filter(username=request.data.get('username'),
+                               email=request.data.get('email')).exists():
+            return Response(data=request.data, status=status.HTTP_200_OK)
 
-        if User.objects.filter(username=username, email=email).exists():
-            return Response(status=status.HTTP_200_OK)
-        if username == 'me':
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        user = get_object_or_404(
+            User, username=serializer.validated_data.get('username')
+        )
+        confirmation_code = default_token_generator.make_token(user)
 
-        serializer = UserSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save(confirmation_code=confirmation_code)
-
-            send_mail(
-                subject='API YaMDB, регистрация',
-                message=f'Ваш код подтверждения {confirmation_code}',
-                from_email='Practicum15@yandex.ru',
-                recipient_list=(f'{email}',),
-                fail_silently=False,
-            )
-            return Response(request.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        send_mail(
+            subject='API YaMDB, регистрация',
+            message=f'Ваш код подтверждения {confirmation_code}',
+            from_email='Practicum15@yandex.ru',
+            recipient_list=(serializer.validated_data.get('email'),),
+            fail_silently=False,
+        )
+        return Response(request.data, status=status.HTTP_200_OK)
 
 
 class TokenView(views.APIView):
@@ -167,7 +157,9 @@ class TokenView(views.APIView):
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
         user = get_object_or_404(User, username=data.get('username'))
-        if user.confirmation_code == data.get('confirmation_code'):
+        confirmation_code = data.get('confirmation_code')
+        if default_token_generator.check_token(user=user,
+                                               token=confirmation_code):
             refresh = RefreshToken.for_user(user)
             token = {'token': str(refresh.access_token)}
             return Response(token, status=status.HTTP_200_OK)
