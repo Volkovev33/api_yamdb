@@ -22,20 +22,11 @@ class IsAdmin(permissions.BasePermission):
 
     def has_permission(self, request, view):
         user = request.user
-        if not user.is_authenticated:
-            return False
-        if user.is_admin_role or user.is_superuser:
-            return True
+        if user.is_authenticated:
+            return user.is_admin_role or user.is_superuser
 
 
-class IsAdminOrReadOnly(permissions.BasePermission):
-    message = 'Требуются права Администратора.'
-
+class ReadOnly(permissions.BasePermission):
     def has_permission(self, request, view):
-        user = request.user
-        if request.method in permissions.SAFE_METHODS:
-            return True
-        if not user.is_authenticated:
-            return False
-        if user.is_admin_role or user.is_superuser:
-            return True
+        return request.method in permissions.SAFE_METHODS
+        

@@ -12,7 +12,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from reviews.models import Category, Genre, Title, Review, User, Comment
 from api.filters import TitleFilter
-from api.permissions import (IsAdmin, IsAdminOrReadOnly,
+from api.permissions import (IsAdmin, ReadOnly,
                              IsAuthorOrModeratorOrAdminOrReadOnly)
 from api.serializers import (CategorySerializer, CommentSerializer,
                              GenreSerializer, ReviewSerializer,
@@ -26,7 +26,7 @@ class ListCreateDestroyViewSet(mixins.ListModelMixin,
                                mixins.CreateModelMixin,
                                mixins.DestroyModelMixin,
                                viewsets.GenericViewSet):
-    permission_classes = (IsAdminOrReadOnly,)
+    permission_classes = ((IsAdmin|ReadOnly),)
     lookup_field = 'slug'
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
@@ -46,7 +46,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.annotate(
         rating=Avg('review__score')
     ).order_by('id')
-    permission_classes = (IsAdminOrReadOnly,)
+    permission_classes = ((IsAdmin|ReadOnly),)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
     http_method_names = ALLOWED_METHODS
