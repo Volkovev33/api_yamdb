@@ -3,22 +3,28 @@ from django.db import models
 from django.core.validators import MaxValueValidator, MinValueValidator
 
 
-ROLES = [
-    ('user', 'Пользователь'),
-    ('moderator', 'Модератор'),
-    ('admin', 'Администратор')
-]
-
-
 class User(AbstractUser):
+    class Role(models.TextChoices):
+        ADMIN = 'admin'
+        MODERATOR = 'moderator'
+        USER = 'user'
+
     bio = models.TextField('Биография', blank=True)
     confirmation_code = models.CharField(
         'Код подтверждения', default="", max_length=64
     )
     role = models.CharField(
-        'Роль', max_length=50, default='user', choices=ROLES
+        'Роль', max_length=20, default=Role.USER, choices=Role.choices
     )
     REQUIRED_FIELDS = ["email"]
+
+    @property
+    def is_moderator_role(self):
+        return self.role == self.Role.MODERATOR
+
+    @property
+    def is_admin_role(self):
+        return self.role == self.Role.ADMIN
 
     def __str__(self):
         return self.username
