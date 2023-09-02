@@ -1,12 +1,7 @@
 from rest_framework import permissions
 
 
-class IsAuthorOrModeratorOrAdminOrReadOnly(permissions.BasePermission):
-    def has_permission(self, request, view):
-        user = request.user
-        if request.method in permissions.SAFE_METHODS or user.is_authenticated:
-            return True
-
+class IsAuthorOrModeratorOrAdmin(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         user = request.user
         if request.method in permissions.SAFE_METHODS:
