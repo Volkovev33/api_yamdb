@@ -6,14 +6,15 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, mixins, viewsets, views, status
 from rest_framework.decorators import action
 from rest_framework.generics import CreateAPIView
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import (AllowAny, IsAuthenticated,
+                                        IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from reviews.models import Category, Genre, Title, Review, User, Comment
 from api.filters import TitleFilter
 from api.permissions import (IsAdmin, ReadOnly,
-                             IsAuthorOrModeratorOrAdminOrReadOnly)
+                             IsAuthorOrModeratorOrAdmin)
 from api.serializers import (CategorySerializer, CommentSerializer,
                              GenreSerializer, ReviewSerializer,
                              TitleGetSerializer, TitleCreateSerializer,
@@ -26,7 +27,7 @@ class ListCreateDestroyViewSet(mixins.ListModelMixin,
                                mixins.CreateModelMixin,
                                mixins.DestroyModelMixin,
                                viewsets.GenericViewSet):
-    permission_classes = ((IsAdmin|ReadOnly),)
+    permission_classes = ((IsAdmin | ReadOnly),)
     lookup_field = 'slug'
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
@@ -46,7 +47,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.annotate(
         rating=Avg('review__score')
     ).order_by('id')
-    permission_classes = ((IsAdmin|ReadOnly),)
+    permission_classes = ((IsAdmin | ReadOnly),)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
     http_method_names = ALLOWED_METHODS
@@ -60,7 +61,8 @@ class TitleViewSet(viewsets.ModelViewSet):
 class ReviewViewSet(viewsets.ModelViewSet):
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
-    permission_classes = (IsAuthorOrModeratorOrAdminOrReadOnly,)
+    permission_classes = (IsAuthorOrModeratorOrAdmin,
+                          IsAuthenticatedOrReadOnly)
     http_method_names = ALLOWED_METHODS
 
     def get_title(self):
@@ -80,7 +82,8 @@ class ReviewViewSet(viewsets.ModelViewSet):
 class CommentViewSet(viewsets.ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
-    permission_classes = (IsAuthorOrModeratorOrAdminOrReadOnly,)
+    permission_classes = (IsAuthorOrModeratorOrAdmin,
+                          IsAuthenticatedOrReadOnly)
     http_method_names = ALLOWED_METHODS
 
     def get_review(self):
