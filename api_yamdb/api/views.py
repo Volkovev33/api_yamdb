@@ -2,7 +2,9 @@ from django.contrib.auth.tokens import default_token_generator
 from django.db.models import Avg
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
+
 from django_filters.rest_framework import DjangoFilterBackend
+
 from rest_framework import filters, mixins, viewsets, views, status
 from rest_framework.decorators import action
 from rest_framework.generics import CreateAPIView
@@ -11,7 +13,6 @@ from rest_framework.permissions import (AllowAny, IsAuthenticated,
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from reviews.models import Category, Genre, Title, Review, User, Comment
 from api.filters import TitleFilter
 from api.permissions import (IsAdmin, ReadOnly,
                              IsAuthorOrModeratorOrAdmin)
@@ -19,6 +20,8 @@ from api.serializers import (CategorySerializer, CommentSerializer,
                              GenreSerializer, ReviewSerializer,
                              TitleGetSerializer, TitleCreateSerializer,
                              UserSerializer, TokenSerializer)
+from reviews.models import Category, Genre, Title, Review, User, Comment
+
 
 ALLOWED_METHODS = ['get', 'post', 'patch', 'delete']
 
